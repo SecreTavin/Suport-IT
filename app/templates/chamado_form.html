@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white shadow-sm ring-1 ring-black ring-opacity-5 rounded-lg p-6">
+    <div class="mb-6 border-b border-gray-200 pb-4">
+        <h2 class="text-lg font-semibold text-gray-800">
+            {% if chamado %}Editar Chamado #{{ chamado.id }}{% else %}Novo Chamado{% endif %}
+        </h2>
+        <p class="text-sm text-gray-500">Preencha os dados do pedido de suporte.</p>
+    </div>
+
+    <form method="POST" action="{% if chamado %}/chamados/{{ chamado.id }}/editar{% else %}/chamados{% endif %}" class="space-y-6">
+        <div>
+            <label for="titulo" class="block text-sm font-medium text-gray-700 mb-1">Título *</label>
+            <input type="text" name="titulo" id="titulo" required value="{{ chamado.titulo if chamado else '' }}"
+                   class="block w-full rounded-md border-gray-300 border px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+        </div>
+
+        <div>
+            <label for="descricao" class="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
+            <textarea name="descricao" id="descricao" rows="4" required
+                      class="block w-full rounded-md border-gray-300 border px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">{{ chamado.descricao if chamado else '' }}</textarea>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+                <label for="prioridade" class="block text-sm font-medium text-gray-700 mb-1">Prioridade *</label>
+                <select name="prioridade" id="prioridade" required
+                        class="block w-full rounded-md border-gray-300 border px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    {% for p in Prioridade %}
+                        <option value="{{ p.value }}" {% if chamado and chamado.prioridade.value == p.value %}selected{% endif %}>{{ p.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            {% if chamado %}
+            <div>
+                <label for="status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" id="status" required
+                        class="block w-full rounded-md border-gray-300 border px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    {% for s in Status %}
+                        <option value="{{ s.value }}" {% if chamado.status.value == s.value %}selected{% endif %}>{{ s.value }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if not chamado %}
+        <div class="border-t border-gray-200 pt-6">
+            <h3 class="text-sm font-medium text-gray-900 mb-3">Atribuição de Responsável</h3>
+            
+            <div class="flex items-center mb-4">
+                <input id="atribuicao_automatica" name="atribuicao_automatica" type="checkbox" checked
+                       class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                       onchange="document.getElementById('responsavel_select_div').classList.toggle('hidden', this.checked)">
+                <label for="atribuicao_automatica" class="ml-2 block text-sm text-gray-900">
+                    Distribuição Automática (Atribuir ao responsável menos ocupado)
+                </label>
+            </div>
+
+            <div id="responsavel_select_div" class="hidden">
+                <label for="responsavel_id" class="block text-sm font-medium text-gray-700 mb-1">Responsável Manual (Opcional)</label>
+                <select name="responsavel_id" id="responsavel_id"
+                        class="block w-full rounded-md border-gray-300 border px-3 py-2 text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                    <option value="">-- Selecione o Atendente --</option>
+                    {% for resp in responsaveis %}
+                        <option value="{{ resp.id }}">{{ resp.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="pt-4 flex items-center justify-end gap-3">
+            <a href="{{ '/chamados/' ~ chamado.id if chamado else '/' }}" class="text-sm font-medium text-gray-700 hover:text-gray-900 border border-gray-300 bg-white py-2 px-4 rounded-md shadow-sm hover:bg-gray-50">Cancelar</a>
+            <button type="submit" class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">
+                {% if chamado %}Salvar Alterações{% else %}Abrir Chamado{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
