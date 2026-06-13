@@ -1,2 +1,2 @@
-echo "venv/" >> .gitignore
-echo ".DS_Store" >> .gitignore
+venv/
+.DS_Store
