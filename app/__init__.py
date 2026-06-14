@@ -1,9 +1,18 @@
 from flask import Flask
 from app.repositories import database
+from flask_wtf.csrf import CSRFProtect
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+csrf = CSRFProtect()
 
 def create_app():
     app = Flask(__name__)
-    app.config['SECRET_KEY'] = 'dev-secret-key-123'
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default-fallback-key-for-dev')
+    
+    csrf.init_app(app)
     
     @app.teardown_appcontext
     def close_db(e=None):

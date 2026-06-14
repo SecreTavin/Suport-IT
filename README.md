@@ -29,3 +29,12 @@ Optou-se por uma arquitetura monolítica utilizando Python e Flask, banco de dad
 
 4. **Acesse no navegador:**
    [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+
+## Considerações para Produção
+
+Esta aplicação foi desenvolvida com foco em simplicidade e prototipagem rápida. Para um ambiente de produção real, as seguintes melhorias são recomendadas:
+
+- **Servidor WSGI:** Utilizar um servidor de produção como Gunicorn ou uWSGI em vez do servidor de desenvolvimento do Flask.
+- **Banco de Dados:** Para cenários de alta concorrência, migrar o SQLite para um SGBD mais robusto como PostgreSQL ou MySQL.
+- **Variáveis de Ambiente:** Garantir que `FLASK_DEBUG` esteja configurado como `False` no arquivo `.env` do ambiente de produção.
+- **Autenticação:** O sistema atual não possui controle de acesso. O próximo passo crucial para um ambiente real seria implementar um sistema de login para proteger o acesso aos dados e funcionalidades.

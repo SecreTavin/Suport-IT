@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from typing import Optional, List
-from datetime import datetime
+from typing import Optional, List, Tuple
+from datetime import datetime, timezone
 
 from app.models.domain import Chamado, Prioridade, Status
 from app.repositories import chamado_repo, responsavel_repo
@@ -22,7 +22,6 @@ class ChamadoUpdateDTO:
     descricao: str
 
 def determinar_responsavel_automatico() -> int:
-    # Obtém a contagem de chamados pendentes por responsável (RN01)
     contagem = chamado_repo.contar_chamados_pendentes_por_responsavel()
     
     if not contagem:
@@ -34,6 +33,7 @@ def determinar_responsavel_automatico() -> int:
     # Busca o ID com o menor número de chamados pendentes
     id_escolhido = min(contagem, key=contagem.get)
     return id_escolhido
+
 
 def criar_chamado(dados: ChamadoCreateDTO) -> Chamado:
     resp_id = dados.responsavel_id
@@ -47,7 +47,8 @@ def criar_chamado(dados: ChamadoCreateDTO) -> Chamado:
         prioridade=dados.prioridade,
         status=Status.ABERTO,
         responsavel_id=resp_id,
-        data_abertura=datetime.now()
+        # CORREÇÃO: Usa fuso horário UTC para consistência
+        data_abertura=datetime.now(timezone.utc)
     )
     
     novo_id = chamado_repo.criar(novo_chamado)
@@ -67,8 +68,19 @@ def atualizar_chamado(dados: ChamadoUpdateDTO) -> Chamado:
     chamado_repo.atualizar(chamado_existente)
     return chamado_existente
 
-def listar_chamados(status: Optional[str] = None, prioridade: Optional[str] = None) -> List[Chamado]:
-    return chamado_repo.listar_todos(filtro_status=status, filtro_prioridade=prioridade)
+
+def listar_chamados_paginado(
+    page: int, 
+    per_page: int, 
+    status: Optional[str] = None, 
+    prioridade: Optional[str] = None
+) -> Tuple[List[Chamado], int]:
+    return chamado_repo.listar_paginado(
+        page=page, 
+        per_page=per_page, 
+        filtro_status=status, 
+        filtro_prioridade=prioridade
+    )
 
 def obter_chamado(chamado_id: int) -> Chamado:
     chamado = chamado_repo.obter_por_id(chamado_id)

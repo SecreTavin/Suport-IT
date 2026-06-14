@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from datetime import datetime
 from app.models.domain import Chamado, Prioridade, Status
 from app.repositories.database import get_db
@@ -7,8 +7,10 @@ def _row_to_chamado(row) -> Chamado:
     data_ab = row['data_abertura']
     if isinstance(data_ab, str):
         try:
+            # Tenta o formato com timezone primeiro (padrão do Python)
             data_ab = datetime.fromisoformat(data_ab)
         except ValueError:
+            # Fallback para o formato do SQLite sem timezone
             data_ab = datetime.strptime(data_ab, "%Y-%m-%d %H:%M:%S")
 
     return Chamado(
@@ -21,23 +23,43 @@ def _row_to_chamado(row) -> Chamado:
         data_abertura=data_ab
     )
 
-def listar_todos(filtro_status: Optional[str] = None, filtro_prioridade: Optional[str] = None) -> List[Chamado]:
+def listar_paginado(
+    page: int, 
+    per_page: int, 
+    filtro_status: Optional[str] = None, 
+    filtro_prioridade: Optional[str] = None
+) -> Tuple[List[Chamado], int]:
     db = get_db()
-    query = 'SELECT * FROM chamados WHERE 1=1'
+    
+    # Contagem total de itens com o filtro
+    count_query = 'SELECT COUNT(id) as total FROM chamados WHERE 1=1'
     params = []
     
     if filtro_status:
-        query += ' AND status = ?'
+        count_query += ' AND status = ?'
         params.append(filtro_status)
-        
     if filtro_prioridade:
-        query += ' AND prioridade = ?'
+        count_query += ' AND prioridade = ?'
         params.append(filtro_prioridade)
         
-    query += ' ORDER BY data_abertura DESC'
+    total_items = db.execute(count_query, params).fetchone()['total']
+
+    # Busca dos itens para a página atual
+    query = 'SELECT * FROM chamados WHERE 1=1'
+    if filtro_status:
+        query += ' AND status = ?'
+    if filtro_prioridade:
+        query += ' AND prioridade = ?'
+        
+    query += ' ORDER BY data_abertura DESC LIMIT ? OFFSET ?'
+    
+    offset = (page - 1) * per_page
+    params.extend([per_page, offset])
     
     cursor = db.execute(query, params)
-    return [_row_to_chamado(row) for row in cursor.fetchall()]
+    chamados = [_row_to_chamado(row) for row in cursor.fetchall()]
+    
+    return chamados, total_items
 
 def obter_por_id(chamado_id: int) -> Optional[Chamado]:
     db = get_db()
