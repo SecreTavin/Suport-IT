@@ -100,7 +100,7 @@ def editar_chamado(id):
         except Exception as e:
             flash(f"Erro ao atualizar chamado: {str(e)}", "error")
             
-    # Na requisição GET, preenchemos o formulário com os dados do banco
+    # Na requisição GET, preenche o formulário com os dados do banco.
     elif request.method == 'GET':
         form.titulo.data = chamado.titulo
         form.descricao.data = chamado.descricao
